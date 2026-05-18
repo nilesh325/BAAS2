@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #050811;
+      --bg-gradient: linear-gradient(135deg, #050811 0%, #0c1020 60%, #020306 100%);
+      --surface:     rgba(13, 20, 38, 0.6);
+      --surface-hi:  rgba(22, 33, 58, 0.85);
+      --border:      rgba(99, 130, 180, 0.12);
+      --border-hi:   rgba(99, 130, 180, 0.28);
+      --accent:      #4f7cff;
+      --accent2:     #7c3aed;
+      --accent-grad: linear-gradient(135deg, #4f7cff, #7c3aed);
+      --text:        #f0f4fc;
+      --muted:       #64748b;
+      --success:     #10b981;
+      --danger:      #ef4444;
+      --warn:        #f59e0b;
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+      --font-sans:    'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-gradient);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient background glowing blobs */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79, 124, 255, 0.12) 0%, transparent 65%);
+      top: -150px; left: -150px;
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 65%);
+      bottom: -150px; right: -150px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Grid overlay texture */
+    .grid-overlay {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    #email-gate {
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      width: 100%;
+      max-width: 420px;
+      padding: 48px 40px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative; z-index: 1;
+    }
+
+    .gate-header { display: flex; flex-direction: column; gap: 12px; }
+
+    .gate-logo {
+      width: 40px; height: 40px;
+      background: var(--accent-grad);
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px;
+      box-shadow: 0 4px 12px rgba(79, 124, 255, 0.3);
+    }
+    .gate-logo svg { width: 20px; height: 20px; fill: white; }
+
+    .gate-title {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.4px;
+    }
+    .gate-subtitle { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+
+    .field-group { display: flex; flex-direction: column; gap: 8px; }
+    .field-label {
+      font-size: 10.5px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      font-family: var(--font-mono);
+    }
+
+    .field-wrap { position: relative; }
+    .field-wrap svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px;
+      stroke: var(--muted); fill: none; stroke-width: 1.8;
+      stroke-linecap: round; stroke-linejoin: round;
+      pointer-events: none; transition: stroke 0.2s;
+    }
+    .field-wrap:focus-within svg { stroke: var(--accent); }
+
+    .email-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px 12px 42px;
+      font-family: var(--font-mono);
+      font-size: 13.5px; color: #fff;
+      background: rgba(255, 255, 255, 0.02); outline: none;
+      transition: all 0.25s;
+    }
+    .email-input::placeholder { color: rgba(255, 255, 255, 0.15); }
+    .email-input:focus {
+      border-color: var(--accent);
+      background: rgba(79, 124, 255, 0.04);
+      box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.1);
+    }
+    .email-input.error { border-color: var(--danger); background: rgba(239, 68, 68, 0.03); }
+
+    .error-msg {
+      font-size: 12px; color: var(--danger);
+      display: none; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+    }
+    .error-msg.visible { display: flex; }
+
+    .continue-btn {
+      width: 100%;
+      background: var(--accent-grad); color: white;
+      border: none; border-radius: 12px; padding: 13px;
+      font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(79, 124, 255, 0.25);
+    }
+    .continue-btn:hover { box-shadow: 0 4px 18px rgba(79, 124, 255, 0.35); }
+    .continue-btn:active { transform: scale(0.98); }
+    .continue-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .continue-btn svg {
+      width: 15px; height: 15px; stroke: white; fill: none;
+      stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      transition: transform 0.2s;
+    }
+    .continue-btn:hover svg { transform: translateX(3px); }
+
+    .gate-note {
+      text-align: center; font-size: 11.5px; color: var(--muted);
+      line-height: 1.5; font-family: var(--font-sans);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+
+  <div id="email-gate">
+    <div class="gate-header">
+      <div class="gate-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+        </svg>
+      </div>
+      <div class="gate-title">Welcome to the Assistant</div>
+      <div class="gate-subtitle" id="gate-subtitle">
+        Enter your company‑registered email address to continue.
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="gate-email">Work Email</label>
+      <div class="field-wrap">
+        <input
+          class="email-input"
+          type="email"
+          id="gate-email"
+          placeholder="you@company.com"
+          autocomplete="email"
+          onkeydown="gateKey(event)"
+        />
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <polyline points="2,4 12,13 22,4"/>
+        </svg>
+      </div>
+      <div class="error-msg" id="gate-error">
+        <svg style="width:13px;height:13px;stroke:var(--error);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="gate-error-text">Please enter a valid email address.</span>
+      </div>
+    </div>
+
+    <button class="continue-btn" id="continue-btn" onclick="submitEmail()">
+      Continue
+      <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+
+    <p class="gate-note">🔒 Your email is used only to identify your company workspace.</p>
+  </div>
+
+<script>
+const pathParts = window.location.pathname.split('/');
+const companyId = pathParts[2] || null;
+
+function gateKey(event) {
+  if (event.key === 'Enter') {
+    submitEmail();
+  }
+}
+
+function showError(msg) {
+  const input = document.getElementById('gate-email');
+  const errorEl = document.getElementById('gate-error');
+  const errorText = document.getElementById('gate-error-text');
+
+  input.classList.add('error');
+  errorText.textContent = msg;
+  errorEl.classList.add('visible');
+}
+
+function clearError() {
+  document.getElementById('gate-email').classList.remove('error');
+  document.getElementById('gate-error').classList.remove('visible');
+}
+
+async function submitEmail() {
+  clearError();
+
+  if (!companyId) {
+    showError('Invalid URL');
+    return;
+  }
+
+  const email = document.getElementById('gate-email').value.trim();
+
+  if (!email) {
+    showError('Email required');
+    return;
+  }
+
+  const btn = document.getElementById('continue-btn');
+  btn.disabled = true;
+  btn.innerText = "Please wait...";
+
+  try {
+    const response = await fetch(`/ai/${companyId}/logined`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: companyId, email: email })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      showError(data.detail || 'Server error');
+      btn.disabled = false;
+      btn.innerText = "Continue";
+      return;
+    }
+
+    localStorage.setItem('user_email', email);
+
+    window.location.href = data.redirect_url;
+
+  } catch (err) {
+    console.error(err);
+    showError('Server crashed');
+    btn.disabled = false;
+    btn.innerText = "Continue";
+  }
+}
+</script>
+
+</body>
+</html>

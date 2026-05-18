@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Auth — Nova</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #050811;
+      --bg-gradient: linear-gradient(135deg, #050811 0%, #0c1020 60%, #020306 100%);
+      --surface:     rgba(13, 20, 38, 0.6);
+      --surface-hi:  rgba(22, 33, 58, 0.85);
+      --border:      rgba(99, 130, 180, 0.12);
+      --border-hi:   rgba(99, 130, 180, 0.28);
+      --accent:      #4f7cff;
+      --accent2:     #7c3aed;
+      --accent-grad: linear-gradient(135deg, #4f7cff, #7c3aed);
+      --text:        #f0f4fc;
+      --muted:       #64748b;
+      --success:     #10b981;
+      --danger:      #ef4444;
+      --warn:        #f59e0b;
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+      --font-sans:    'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient glow orbs */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79, 124, 255, 0.12) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Subtle grid texture overlay */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 36px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+      transition: border-color 0.3s;
+    }
+    .card:hover {
+      border-color: var(--border-hi);
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--accent-grad);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(79, 124, 255, 0.35);
+    }
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    /* Tab switcher */
+    .tabs {
+      display: flex;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 28px;
+      border: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1;
+      padding: 9px;
+      border-radius: 9px;
+      border: none;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+      background: transparent;
+    }
+    .tab.active {
+      background: rgba(79, 124, 255, 0.15);
+      color: #fff;
+      border: 1px solid rgba(79, 124, 255, 0.25);
+      box-shadow: 0 2px 8px rgba(79, 124, 255, 0.1);
+    }
+    .tab:not(.active):hover { color: var(--text); }
+
+    /* Section heading */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .section-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-family: var(--font-sans);
+    }
+
+    /* OAuth buttons */
+    .oauth-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: #cbd5e1;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .oauth-btn:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--border-hi);
+      color: #fff;
+    }
+    .oauth-btn svg { flex-shrink: 0; }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+    .divider span { font-size: 11px; color: var(--muted); white-space: nowrap; font-family: var(--font-mono); }
+
+    /* Form fields */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .field input {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color: rgba(255,255,255,0.15); }
+    .field input:focus {
+      border-color: var(--accent);
+      background: rgba(79, 124, 255, 0.04);
+      box-shadow: 0 0 0 3px rgba(79,124,255,0.1);
+    }
+
+    .field-row { display: flex; gap: 10px; }
+    .field-row .field { flex: 1; }
+
+    /* Forgot password */
+    .forgot {
+      text-align: right;
+      margin-top: -8px;
+      margin-bottom: 20px;
+    }
+    .forgot a {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.15s;
+      font-family: var(--font-mono);
+    }
+    .forgot a:hover { color: #fff; }
+
+    /* Terms */
+    .terms {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .terms a { color: var(--accent); text-decoration: none; }
+    .terms a:hover { color: #fff; }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent-grad);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(79, 124, 255, 0.25);
+    }
+    .submit-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .submit-btn:hover {
+      box-shadow: 0 6px 20px rgba(79, 124, 255, 0.4);
+    }
+    .submit-btn:hover::after { opacity: 1; }
+    .submit-btn:active { transform: scale(0.98); }
+
+    /* Footer note */
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+    .footer-note a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer-note a:hover { color: #fff; }
+
+    /* Panel visibility */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Password strength */
+    .strength-bar {
+      display: flex; gap: 4px; margin-top: 6px;
+    }
+    .strength-bar span {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.06);
+      transition: background 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid-overlay"></div>
+
+<div class="card">
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.15)"/>
+        <path d="M8 12h8M12 8l4 4-4 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="logo-text">BASS</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login', this)">Sign in</button>
+    <button class="tab" onclick="switchTab('register', this)">Create account</button>
+  </div>
+
+  <!-- LOGIN PANEL -->
+  <div class="panel active" id="panel-login">
+    <div class="section-title">Welcome back</div>
+    <div class="section-sub">Sign in to continue to BAAS</div>
+
+    <div class="oauth-group flex justify-center">
+      <div id="google-btn-login" class="google-signin-container w-full flex justify-center"></div>
+    </div>
+
+    <div class="divider"><span>or sign in with email</span></div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" placeholder="you@example.com" id="log-email"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" id="log-password"/>
+    </div>
+
+    <div class="forgot"><a href="#">Forgot password?</a></div>
+
+    <button class="submit-btn" onclick="loginuser()">Sign in</button>
+
+    <div class="footer-note">
+      Don't have an account? <a href="#" onclick="switchTabByName('register')">Create one</a>
+    </div>
+  </div>
+
+  <!-- REGISTER PANEL -->
+  <div class="panel" id="panel-register" >
+    <div class="section-title">Create account</div>
+    <div class="section-sub">Get started with BAAS for free</div>
+
+    <div class="oauth-group flex justify-center">
+      <div id="google-btn-register" class="google-signin-container w-full flex justify-center"></div>
+    </div>
+
+    <div class="divider"><span>or register with email</span></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Company name</label>
+        <input type="text" id="reg-company" placeholder="XYZ Inc."/>
+      </div>
+  
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@example.com"/>
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input type="password" placeholder="Min. 8 characters" id="reg-password" oninput="checkStrength(this.value)"/>
+      <div class="strength-bar">
+        <span id="s1"></span><span id="s2"></span><span id="s3"></span><span id="s4"></span>
+      </div>
+    </div>
+
+
+    <div class="terms">
+      By creating an account you agree to our
+      <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </div>
+
+    <button class="submit-btn" onclick="registerUser()">Create account</button>
+
+    <div class="footer-note">
+      Already have an account? <a href="#" onclick="switchTabByName('login')">Sign in</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const colors = ['rgba(255,255,255,0.08)', '#ef4444', '#f97316', '#22c55e'];
+
+  function checkStrength(val) {
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const fills = ['rgba(255,255,255,0.08)', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('s' + i).style.background = i <= score ? fills[score] : fills[0];
+    }
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+
+  function switchTabByName(name) {
+    const tabs = document.querySelectorAll('.tab');
+    const idx = name === 'login' ? 0 : 1;
+    switchTab(name, tabs[idx]);
+    return false;
+  }
+
+  // to retrieve company information and send to backend
+  function registerUser() {
+    const company = document.getElementById("reg-company").value;
+    const email = document.getElementById("reg-email").value;
+    const password = document.getElementById("reg-password").value;
+
+      console.log("Company:", company);
+      console.log("Email:", email);
+      console.log("Password:", password);
+      sendToBackend1(company, email, password)
+                              }
+    // Send to backend
+  function sendToBackend1(company, email, password) {
+  fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ company, email, password })
+  })
+  .then(async res => {
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      // ✅ Show alert instead of console.error
+      alert(data?.detail || "Registration failed");
+      return;
+    }
+
+    if (data.company_id) {
+      localStorage.setItem("company_id", data.company_id);
+    }
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+    }
+    if (data?.redirect) {
+      window.location.href = data.redirect;
+    }
+  })
+  .catch(err => {
+    console.error("Request failed:", err);
+    alert("Something went wrong. Please try again.");
+  });
+}
+
+
+
+    function loginuser() {
+      const email = document.getElementById("log-email").value;
+      const password = document.getElementById("log-password").value;
+
+      console.log("Login Email:", email);
+      console.log("Login Password:", password);
+
+      // Call backend
+      sendToBackendLogin(email, password);
+                        }
+
+function sendToBackendLogin(email, password) {
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  })
+  .then(async res => {
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      alert("Login failed:"+ data?.detail || "Unknown error");
+      return;
+    }
+    if (data.company_id) {
+      localStorage.setItem("company_id", data.company_id);
+    }
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+    }
+    if (data.redirect) {
+      window.location.href = data.redirect;
+                        }
+  })
+  .catch(err => console.error("Request failed:", err));
+}
+
+// Google OAuth initialization and handling
+async function initGoogleOAuth() {
+  try {
+    const res = await fetch("/api/config");
+    const config = await res.json();
+    if (!config.google_client_id) {
+      console.warn("Google Client ID not configured in .env");
+      return;
+    }
+    
+    // Load Google GSI Client dynamically
+    if (typeof google === 'undefined') {
+      await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
+    }
+
+    google.accounts.id.initialize({
+      client_id: config.google_client_id,
+      callback: handleCredentialResponse
+    });
+
+    const googleBtnContainers = document.querySelectorAll(".google-signin-container");
+    googleBtnContainers.forEach(container => {
+      google.accounts.id.renderButton(container, {
+        theme: "dark",
+        size: "large",
+        width: 348, // perfect fit for internal container
+        type: "standard",
+        shape: "rectangular",
+        text: "continue_with",
+        logo_alignment: "left"
+      });
+    });
+  } catch (e) {
+    console.error("Failed to initialize Google OAuth:", e);
+  }
+}
+
+async function handleCredentialResponse(response) {
+  const idToken = response.credential;
+  try {
+    const res = await fetch("/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: idToken })
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      alert("Google Sign-In failed: " + (data.detail || "Unknown error"));
+      return;
+    }
+    
+    if (data.company_id) {
+      localStorage.setItem("company_id", data.company_id);
+    }
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+    }
+    if (data.redirect) {
+      window.location.href = data.redirect;
+    }
+  } catch (e) {
+    console.error("Google login request failed:", e);
+    alert("Something went wrong connecting to the server.");
+  }
+}
+
+window.addEventListener('load', initGoogleOAuth);
+</script>
+
+</body>
+</html>

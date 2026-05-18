@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile Settings — Nova</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="/static/js/protectroute.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #050811;
+      --bg-gradient: linear-gradient(135deg, #050811 0%, #0c1020 60%, #020306 100%);
+      --surface:     rgba(13, 20, 38, 0.6);
+      --surface-hi:  rgba(22, 33, 58, 0.85);
+      --border:      rgba(99, 130, 180, 0.12);
+      --border-hi:   rgba(99, 130, 180, 0.28);
+      --accent:      #4f7cff;
+      --accent2:     #7c3aed;
+      --accent-grad: linear-gradient(135deg, #4f7cff, #7c3aed);
+      --text:        #f0f4fc;
+      --muted:       #64748b;
+      --success:     #10b981;
+      --danger:      #ef4444;
+      --warn:        #f59e0b;
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'IBM Plex Mono', monospace;
+      --font-sans:    'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient radial glows */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79, 124, 255, 0.10) 0%, transparent 70%);
+      top: -250px; left: -200px;
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.07) 0%, transparent 70%);
+      bottom: -150px; right: -100px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Grid overlay texture */
+    .grid-overlay {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+      justify-content: center;
+    }
+
+    .main {
+      flex: 1;
+      padding: 56px 24px 80px;
+      max-width: 760px;
+    }
+
+    .page-header { margin-bottom: 36px; }
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .page-sub { font-size: 13px; color: var(--muted); }
+
+    /* Custom Back button */
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 9px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); font-size: 11px; font-family: var(--font-mono);
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: all 0.2s; margin-bottom: 24px;
+    }
+    .btn-back:hover {
+      border-color: var(--border-hi); color: var(--text);
+      box-shadow: 0 4px 12px rgba(255,255,255,0.02);
+    }
+
+    /* Banner profile display */
+    .profile-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .avatar-wrapper { position: relative; flex-shrink: 0; }
+    .avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--accent-grad);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 26px; font-weight: 700; color: #fff;
+      border: 3px solid rgba(79, 124, 255, 0.35);
+      box-shadow: 0 4px 14px rgba(79,124,255,0.25);
+    }
+    .avatar-edit-btn {
+      position: absolute; bottom: 0; right: 0;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .avatar-edit-btn:hover { background: var(--accent2); }
+    
+    .profile-info { flex: 1; }
+    .profile-name {
+      font-family: var(--font-display);
+      font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 3px;
+    }
+    .profile-email { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+    /* Glass card sections */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .section-head {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title-sm {
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px;
+    }
+    .section-desc { font-size: 12px; color: var(--muted); }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .field-grid.full { grid-template-columns: 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 10px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;
+      font-family: var(--font-mono);
+    }
+    .field input, .field select, .field textarea {
+      padding: 10px 13px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px; color: var(--text);
+      outline: none; transition: all 0.2s;
+      width: 100%;
+    }
+    .field input::placeholder { color: rgba(255,255,255,0.15); }
+    .field input:focus {
+      border-color: var(--accent);
+      background: rgba(79, 124, 255, 0.04);
+      box-shadow: 0 0 0 3px rgba(79,124,255,0.1);
+    }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+
+    .strength-row { display: flex; gap: 4px; margin-top: 6px; }
+    .strength-row span {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.06);
+      transition: background 0.3s;
+    }
+    .strength-label { font-size: 11px; color: var(--muted); margin-top: 5px; font-family: var(--font-mono); }
+
+    .connected-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .connected-item:last-child { border-bottom: none; }
+    .connected-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .connected-info { flex: 1; }
+    .connected-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .conn-btn {
+      font-size: 11px; font-weight: 600;
+      padding: 6px 14px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer; transition: all 0.15s;
+      font-family: var(--font-mono);
+    }
+    .conn-btn.unlink { color: var(--danger); border-color: rgba(239,68,68,0.25); }
+    .conn-btn.unlink:hover { background: rgba(239,68,68,0.08); }
+
+    /* Danger cockpit cards */
+    .danger-card {
+      background: rgba(239, 68, 68, 0.03);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .danger-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(239,68,68,0.08);
+      gap: 16px;
+    }
+    .danger-item:last-child { border-bottom: none; }
+    .danger-label { font-size: 13px; font-weight: 600; color: #fca5a5; margin-bottom: 2px; }
+    .danger-desc { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+    .danger-btn {
+      font-size: 11px; font-weight: 600;
+      padding: 7px 16px; border-radius: 8px;
+      border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(239,68,68,0.08);
+      color: #ef4444;
+      cursor: pointer; transition: all 0.15s;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+    .danger-btn:hover { background: rgba(239,68,68,0.15); }
+
+    .action-row {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 20px;
+    }
+    .btn-cancel {
+      padding: 9px 20px; border-radius: 9px;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-cancel:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .btn-save {
+      padding: 9px 22px; border-radius: 9px;
+      border: none;
+      background: var(--accent-grad);
+      color: #fff;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(79, 124, 255, 0.25);
+    }
+    .btn-save:hover { box-shadow: 0 4px 18px rgba(79, 124, 255, 0.35); }
+    .btn-save:active { transform: scale(0.98); }
+
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 13px; color: var(--success);
+      display: flex; align-items: center; gap: 10px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transform: translateY(20px); opacity: 0;
+      transition: all 0.3s; pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 768px) {
+      .main { padding: 36px 16px 60px; }
+      .field-grid { grid-template-columns: 1fr; }
+      .profile-banner { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid-overlay"></div>
+
+<div class="layout">
+  <main class="main">
+    <div class="btn-back" onclick="window.location.href='/home'">
+      ← Dashboard
+    </div>
+
+    <div class="page-header">
+      <div class="page-title">Profile Settings</div>
+      <div class="page-sub">Manage your account information and preferences</div>
+    </div>
+
+    <!-- Profile Banner -->
+    <div class="profile-banner">
+      <div class="avatar-wrapper">
+        <div class="avatar" id="avatar-initials">AJ</div>
+        <div class="avatar-edit-btn" title="Change avatar">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="profile-info">
+        <div class="flex flex-col">
+          <span id="banner-company-name" class="profile-name">Loading...</span>
+          <span id="banner-email" class="profile-email">Loading...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="section-card">
+      <div class="section-head">
+        <div>
+          <div class="section-title-sm">Personal Information</div>
+          <div class="section-desc">Update your company name and details</div>
+        </div>
+      </div>
+      <div class="field-grid" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Company Name</label>
+          <input type="text" id="company-name-input" placeholder="Enter company name" />
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn-save" onclick="updatename()">Update</button>
+      </div>
+    </div>
+
+    <!-- Email Address -->
+    <div class="section-card">
+      <div class="section-head">
+        <div>
+          <div class="section-title-sm">Email Address</div>
+          <div class="section-desc">Change the email address linked to your account</div>
+        </div>
+      </div>
+      <div class="field-grid" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Current email</label>
+          <input id="current-email-display" type="text" readonly />
+          <div class="field-hint">Verified · Mail Account</div>
+        </div>
+        <div class="field">
+          <label>New email</label>
+          <input type="email" placeholder="new@example.com" id="new-email"/>
+        </div>
+      </div>
+      <div class="field-grid full" style="margin-bottom:0;">
+        <div class="field">
+          <label>Confirm password to change email</label>
+          <input type="password" placeholder="Enter your current password" id="confirm-password1"/>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn-cancel" onclick="document.getElementById('new-email').value='';document.getElementById('confirm-password1').value=''">Cancel</button>
+        <button class="btn-save" onclick="updateemail()">Update email</button>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="section-card">
+      <div class="section-head">
+        <div>
+          <div class="section-title-sm">Password</div>
+          <div class="section-desc">Choose a strong password to protect your account</div>
+        </div>
+      </div>
+      <div class="field-grid full" style="margin-bottom:14px;">
+        <div class="field">
+          <label>Current password</label>
+          <input type="password" placeholder="Type current password" id="current-password">
+        </div>
+      </div>
+      <div class="field-grid" style="margin-bottom:6px;">
+        <div class="field">
+          <label>New password</label>
+          <input type="password" placeholder="Min. 8 characters" id="new-password1" oninput="checkStrength(this.value)"/>
+          <div class="strength-row">
+            <span id="p1"></span><span id="p2"></span><span id="p3"></span><span id="p4"></span>
+          </div>
+          <div class="strength-label" id="strength-label">Enter a password</div>
+        </div>
+        <div class="field">
+          <label>Confirm new password</label>
+          <input type="password" placeholder="Repeat password" id="new-password2"/>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn-save" onclick="updatepassword()">Change password</button>
+      </div>
+    </div>
+
+    <!-- Connected Accounts -->
+    <div class="section-card">
+      <div class="section-head">
+        <div>
+          <div class="section-title-sm">Connected Accounts</div>
+          <div class="section-desc">Link social accounts for faster sign-in</div>
+        </div>
+      </div>
+      <div id="google-connection-row" class="connected-item">
+        <div class="connected-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+        </div>
+        <div class="connected-info">
+          <div class="connected-name">Google</div>
+          <span class="text-xs text-slate-400">Loading...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-card">
+      <div class="section-head" style="border-bottom-color: rgba(239,68,68,0.1); margin-bottom:8px;">
+        <div>
+          <div class="section-title-sm" style="color:#fca5a5;">Danger Zone</div>
+          <div class="section-desc" style="color:#7f1d1d;">Irreversible actions — proceed with caution</div>
+        </div>
+      </div>
+      <div class="danger-item">
+        <div>
+          <div class="danger-label">Deactivate account</div>
+          <div class="danger-desc">Temporarily disable your account — you can reactivate anytime by logging in again</div>
+        </div>
+        <button class="danger-btn" onclick="deactivateAccount()">Deactivate</button>
+      </div>
+      <div class="danger-item">
+        <div>
+          <div class="danger-label">Delete account permanently</div>
+          <div class="danger-desc">All data will be erased and cannot be recovered</div>
+        </div>
+        <button class="danger-btn" onclick="deleteAccountPermanently()">Delete account</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2.2" stroke-linecap="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="toast-msg">Saved!</span>
+</div>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────
+  function checkStrength(val) {
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const fills = ['rgba(255,255,255,0.07)', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+    const labels = ['Enter a password', 'Weak', 'Fair', 'Good', 'Strong'];
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('p' + i).style.background = i <= score ? fills[score] : fills[0];
+    }
+    document.getElementById('strength-label').textContent = val ? labels[score] : labels[0];
+    document.getElementById('strength-label').style.color = score > 0 ? fills[score] : '#334155';
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function setInitials(name) {
+    if (!name) return;
+    const parts = name.trim().split(/\s+/);
+    const initials = parts.length >= 2
+      ? parts[0][0] + parts[1][0]
+      : parts[0].slice(0, 2);
+    document.getElementById('avatar-initials').textContent = initials.toUpperCase();
+  }
+
+  // ── Load company data on page load ───────────────────────
+  // ── Render Google Connection Status ──────────────────────
+  function renderGoogleConnection(isLinked) {
+    const row = document.getElementById("google-connection-row");
+    if (!row) return;
+
+    if (isLinked) {
+      row.innerHTML = `
+        <div class="connected-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+        </div>
+        <div class="connected-info">
+          <div class="connected-name">Google</div>
+          <span class="text-xs text-teal-400">✓ Linked</span>
+        </div>
+        <button class="conn-btn unlink" onclick="unlinkGoogleAccount()">Unlink</button>
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="connected-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+        </div>
+        <div class="connected-info">
+          <div class="connected-name">Google</div>
+          <span class="text-xs text-slate-400">Not connected</span>
+        </div>
+        <div id="google-link-btn-container" style="flex-shrink:0;"></div>
+      `;
+      renderGoogleLinkButton();
+    }
+  }
+
+  // ── Render Google OAuth Link Button ──────────────────────
+  async function renderGoogleLinkButton() {
+    try {
+      const res = await fetch("/api/config");
+      const config = await res.json();
+      if (!config.google_client_id) return;
+
+      if (typeof google === 'undefined') {
+        await new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.onload = resolve;
+          document.head.appendChild(script);
+        });
+      }
+
+      google.accounts.id.initialize({
+        client_id: config.google_client_id,
+        callback: handleGoogleLinkResponse
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById("google-link-btn-container"),
+        {
+          theme: "outline",
+          size: "medium",
+          type: "standard",
+          shape: "rectangular",
+          text: "signin_with",
+          logo_alignment: "left"
+        }
+      );
+    } catch (e) {
+      console.error("Failed to render Google link button:", e);
+    }
+  }
+
+  // ── Handle Google Link Credentials Response ──────────────
+  async function handleGoogleLinkResponse(response) {
+    const idToken = response.credential;
+    try {
+      const res = await fetch("/link-google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ token: idToken })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast("Google account linked successfully!");
+        loadCompanyData();
+      } else {
+        alert("Failed to link Google account: " + (data.detail || "Unknown error"));
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Connection error");
+    }
+  }
+
+  // ── Unlink Google Account ────────────────────────────────
+  async function unlinkGoogleAccount() {
+    if (!confirm("Are you sure you want to unlink your Google account?")) return;
+
+    try {
+      const res = await fetch("/unlink-google", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast("Google account unlinked successfully!");
+        loadCompanyData();
+      } else {
+        alert(data.detail || "Failed to unlink Google account");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Connection error");
+    }
+  }
+
+  // ── Permanent Account Deletion ───────────────────────────
+  async function deleteAccountPermanently() {
+    const companyId = localStorage.getItem("company_id");
+    if (!companyId) return showToast("Session expired — please log in again");
+
+    const confirm1 = confirm("⚠️ DANGER ZONE: Are you absolutely sure you want to permanently delete your account?\n\nThis will permanently destroy all your company data, chatbot configurations, vector database chunks, uploaded PDF documents, and support tickets.\n\nThis action is irreversible!");
+    if (!confirm1) return;
+
+    const confirm2 = prompt("To confirm deletion, type your company name below:");
+    const activeCompanyName = document.getElementById("company-name-input").value.trim();
+
+    if (confirm2 !== activeCompanyName) {
+      alert("Deletion cancelled. Company name mismatch.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/delete-account/${companyId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${localStorage.getItem('access_token')}` }
+      });
+
+      if (res.ok) {
+        alert("Your account and all associated data have been permanently deleted. Goodbye!");
+        localStorage.clear();
+        window.location.href = "/";
+      } else {
+        const data = await res.json();
+        alert(data.detail || "Error occurred during deletion");
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Server connection error");
+    }
+  }
+
+  // ── Load company data on page load ───────────────────────
+  async function loadCompanyData() {
+    const companyId = localStorage.getItem("company_id");
+    if (!companyId) {
+      console.warn("No company_id in localStorage");
+      document.getElementById("banner-company-name").textContent = "Unknown";
+      document.getElementById("banner-email").textContent = "";
+      return;
+    }
+
+    try {
+      const res = await fetch(`/company/${companyId}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem('access_token')}` }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const name  = data.company || "";
+      const email = data.email   || "";
+      const isGoogle = data.is_google || false;
+
+      // Banner
+      document.getElementById("banner-company-name").textContent = name  || "—";
+      document.getElementById("banner-email").textContent         = email || "—";
+
+      // Inputs
+      document.getElementById("company-name-input").value    = name;
+      document.getElementById("current-email-display").value = email;
+
+      // Avatar initials
+      setInitials(name);
+
+      // Render Google connection status dynamically
+      renderGoogleConnection(isGoogle);
+
+    } catch (err) {
+      console.error("Failed to load company data:", err);
+      showToast("Could not load profile data");
+    }
+  }
+
+  // ── Update name ──────────────────────────────────────────
+  async function updatename() {
+    const companyId = localStorage.getItem("company_id");
+    const newName   = document.getElementById("company-name-input").value.trim();
+
+    if (!companyId)   return showToast("Session expired — please log in again");
+    if (!newName)     return showToast("Company name cannot be empty");
+
+    try {
+      const res = await fetch(`/updatename/${companyId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ company: newName })
+      });
+
+      if (res.ok) {
+        showToast("Name updated!");
+        document.getElementById("banner-company-name").textContent = newName;
+        setInitials(newName);
+      } else {
+        const err = await res.json();
+        showToast(err.detail || "Update failed");
+      }
+    } catch {
+      showToast("Server connection error");
+    }
+  }
+
+  // ── Update email ─────────────────────────────────────────
+  async function updateemail() {
+    const companyId      = localStorage.getItem("company_id");
+    const newEmail       = document.getElementById("new-email").value.trim();
+    const confirmPassword = document.getElementById("confirm-password1").value;
+
+    if (!companyId || !newEmail || !confirmPassword)
+      return showToast("All fields are required");
+
+    try {
+      const res = await fetch(`/updateemail/${companyId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ email: newEmail, password: confirmPassword })
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+
+      if (res.ok) {
+        showToast("Email updated!");
+        document.getElementById("banner-email").textContent         = newEmail;
+        document.getElementById("current-email-display").value      = newEmail;
+        document.getElementById("new-email").value                  = "";
+        document.getElementById("confirm-password1").value          = "";
+      } else if (contentType.includes("application/json")) {
+        const err = await res.json();
+        showToast(err.detail || "Error updating email");
+      } else {
+        showToast("Server error — please try again");
+      }
+    } catch {
+      showToast("Connection error");
+    }
+  }
+
+  // ── Update password ──────────────────────────────────────
+  async function updatepassword() {
+    const companyId     = localStorage.getItem("company_id");
+    const currPassword  = document.getElementById("current-password").value;
+    const password1     = document.getElementById("new-password1").value;
+    const password2     = document.getElementById("new-password2").value;
+
+    if (!companyId) return showToast("Session expired — please log in again");
+    if (!currPassword || !password1 || !password2) return showToast("All fields are required");
+
+    try {
+      const res = await fetch(`/updatepassword/${companyId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({ password1, password2, current_password: currPassword })
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+
+      if (res.ok) {
+        showToast("Password updated!");
+        document.getElementById("current-password").value = "";
+        document.getElementById("new-password1").value    = "";
+        document.getElementById("new-password2").value    = "";
+        checkStrength("");
+      } else if (contentType.includes("application/json")) {
+        const err = await res.json();
+        showToast(err.detail || "Error updating password");
+      } else {
+        showToast("Server error — please try again");
+      }
+    } catch {
+      showToast("Connection error");
+    }
+  }
+
+  // ── Deactivate account ───────────────────────────────────
+  async function deactivateAccount() {
+    const companyId = localStorage.getItem("company_id");
+    if (!companyId) return showToast("Session expired — please log in again");
+
+    if (!confirm("Are you sure you want to deactivate your account?")) return;
+
+    try {
+      const res = await fetch(`/deactivate/${companyId}`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${localStorage.getItem('access_token')}` }
+      });
+
+      if (res.ok) {
+        alert("Account deactivated. You will be logged out.");
+        localStorage.clear();
+        window.location.href = "/";
+      } else {
+        const data = await res.json();
+        showToast(data.detail || "Error occurred");
+      }
+    } catch {
+      showToast("Server error");
+    }
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  loadCompanyData();   // ← THIS was the missing call
+</script>
+</body>
+</html>
