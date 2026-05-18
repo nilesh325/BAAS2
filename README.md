@@ -53,7 +53,7 @@ BAAS2/
 │   ├── eslint.config.js          # Code quality and syntax standards config
 │   ├── index.html                # Vite client entry page template
 │   ├── package.json              # Client dependencies, React Router, & script commands
-│   ├── README.md                 # Dedicated frontend documentation guide (This file)
+│   ├── README.md                 # Dedicated frontend documentation guide
 │   └── vite.config.js            # Compile settings, base asset mapping, and dev server proxies
 ├── routes/                       # Asynchronous Backend REST API Route Controllers
 │   ├── auth.py                   # Administrative signup, login, Google GSI auth, & JWT generator
@@ -71,7 +71,7 @@ BAAS2/
 ├── main.py                       # FastAPI core main entry, CORS middleware, and production SPA dist mount
 ├── tickets.py                    # Support tickets status updater and logic-hardened deletion endpoint
 ├── requirements.txt              # Unified list of backend Python library dependencies
-└── README.md                     # Root project master documentation file
+└── README.md                     # Root project master documentation file (This file)
 ```
 
 ---
