@@ -15,6 +15,8 @@ export default function Tickets() {
   // Modal States
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [ticketToDelete, setTicketToDelete] = useState(null)
 
   const companyId = localStorage.getItem('company_id')
   const accessToken = localStorage.getItem('access_token')
@@ -109,16 +111,24 @@ export default function Tickets() {
     }
   }
 
-  // Action: Delete ticket
-  const deleteTicket = async (ticketId) => {
-    if (!confirm('Are you sure you want to delete this support ticket?')) return
+  // Trigger delete confirmation modal
+  const triggerDeleteConfirm = (ticket) => {
+    setTicketToDelete(ticket)
+    setDeleteConfirmOpen(true)
+  }
+
+  // Action: Delete ticket execute
+  const executeDelete = async () => {
+    if (!ticketToDelete) return
     try {
-      const res = await fetch(`/delete_ticket/${ticketId}`, {
+      const res = await fetch(`/delete_ticket/${ticketToDelete.ticket_id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${accessToken}` }
       })
       if (!res.ok) throw new Error('Failed to delete ticket')
-      setTickets(prev => prev.filter(t => t.ticket_id !== ticketId))
+      setTickets(prev => prev.filter(t => t.ticket_id !== ticketToDelete.ticket_id))
+      setDeleteConfirmOpen(false)
+      setTicketToDelete(null)
     } catch (err) {
       console.error(err)
       alert('Failed to delete ticket')
@@ -297,7 +307,7 @@ export default function Tickets() {
                         <CheckCircle2 size={12} />
                       </button>
                       <button
-                        onClick={() => deleteTicket(ticket.ticket_id)}
+                        onClick={() => triggerDeleteConfirm(ticket)}
                         className="p-1 rounded bg-white/5 border border-[#6382b4]/12 text-[#ef4444] hover:bg-[#ef4444]/10 hover:border-[#ef4444]/20 hover:scale-105 transition-all cursor-pointer"
                         title="Delete Ticket"
                       >
@@ -385,6 +395,40 @@ export default function Tickets() {
             >
               Close Details
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmOpen && ticketToDelete && (
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setDeleteConfirmOpen(false) }}
+          className="fixed inset-0 z-50 bg-[#020306]/70 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+        >
+          <div className="w-full max-w-[400px] bg-[#16213a]/95 border border-[#ef4444]/28 rounded-2xl p-6 md:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.7)] text-center">
+            <div className="w-12 h-12 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/20 flex items-center justify-center mx-auto mb-4 text-[#ef4444]">
+              <AlertCircle size={24} />
+            </div>
+            
+            <h3 className="font-['Syne'] text-base font-bold text-white tracking-tight mb-2">Delete Support Ticket</h3>
+            <p className="text-xs text-[#94a3b8] leading-relaxed mb-6 font-mono">
+              Are you sure you want to permanently delete the ticket from <span className="text-[#f59e0b] font-semibold">{ticketToDelete.email}</span>? This action cannot be undone.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="py-2.5 bg-white/5 border border-[#6382b4]/12 hover:bg-white/10 text-white text-xs font-semibold rounded-lg transition-all cursor-pointer font-mono"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDelete}
+                className="py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow-[0_4px_12px_rgba(239,68,68,0.25)] hover:shadow-[0_4px_18px_rgba(239,68,68,0.35)] transition-all cursor-pointer font-mono"
+              >
+                Yes, Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
