@@ -19,7 +19,7 @@ class SessionRequest(BaseModel):
 # ─────────────────────────────────────────────────────────────
 @router.get("/ai/{company_id}/login")
 async def get_login(company_id: str):
-    return FileResponse("static/email.html")
+    return FileResponse("frontend/dist/index.html")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ async def serve_chatbot(company_id: str, session_id: str):
     if not session:
         return RedirectResponse(url=f"/ai/{company_id}/login")
 
-    return FileResponse("static/chatbot.html")
+    return FileResponse("frontend/dist/index.html")
 
 
 # ─────────────────────────────────────────────────────────────

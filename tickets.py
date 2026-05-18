@@ -92,7 +92,7 @@ async def update_ticket(ticket_id: str, body: StatusUpdate, current_company: dic
         if not ticket:
             raise HTTPException(status_code=404, detail="Ticket not found")
 
-        if ticket.get("company_id") != str(current_company["_id"]):
+        if str(ticket.get("company_id")) != str(current_company["_id"]):
             raise HTTPException(status_code=403, detail="Not authorized to modify this ticket")
 
         result = await db["tickets"].update_one(
@@ -124,7 +124,7 @@ async def delete_ticket(ticket_id: str, current_company: dict = Depends(get_curr
         if not ticket:
             raise HTTPException(status_code=404, detail="Ticket not found")
 
-        if ticket.get("company_id") != str(current_company["_id"]):
+        if str(ticket.get("company_id")) != str(current_company["_id"]):
             raise HTTPException(status_code=403, detail="Not authorized to delete this ticket")
 
         result = await db["tickets"].delete_one({"ticket_id": ticket_id})

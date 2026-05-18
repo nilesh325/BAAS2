@@ -14,27 +14,28 @@ async def get_config():
 
 @router.get("/")
 async def get_auth():
-    return FileResponse("static/auth.html")
+    return FileResponse("frontend/dist/index.html")
 
 
 @router.get("/home")
 async def get_home():
-    return FileResponse("static/home.html")
+    return FileResponse("frontend/dist/index.html")
 
 
 @router.get("/contactus")
 async def get_contact_us():
-    return FileResponse("static/contactus.html")
+    return FileResponse("frontend/dist/index.html")
 
 
 @router.get("/profile")
 async def get_profile():
-    return FileResponse("static/profile.html")
+    return FileResponse("frontend/dist/index.html")
 
 
 @router.get("/tickets")
 async def get_profile():
-    return FileResponse("static/tickets.html")
+    return FileResponse("frontend/dist/index.html")
+
 
 
 
