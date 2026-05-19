@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageSquare, Mail, Phone, ChevronDown, ShieldAlert, Award, FileText } from 'lucide-react'
+import { MessageSquare, Mail, Phone, ChevronDown } from 'lucide-react'
 
 export default function ContactUs() {
   const navigate = useNavigate()
@@ -12,20 +12,20 @@ export default function ContactUs() {
     const helpDeskCid = '69fcb36d0ec22d7403229545'
     const token = localStorage.getItem('access_token')
 
-    if (token) {
-      try {
+    try {
+      if (token) {
         const parts = token.split('.')
         if (parts.length === 3) {
           const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
           const payload = JSON.parse(payloadJson)
-          
+
           if (payload.email) {
             const res = await fetch(`/ai/${helpDeskCid}/logined`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ company_id: helpDeskCid, email: payload.email })
             })
-            
+
             if (res.ok) {
               const data = await res.json()
               // Extract relative path from absolute dynamic redirect url if present
@@ -39,11 +39,13 @@ export default function ContactUs() {
             }
           }
         }
-      } catch (e) {
-        console.warn('Failed to automatically authenticate with help desk:', e)
       }
+    } catch (e) {
+      console.warn('Failed to automatically authenticate with help desk:', e)
+    } finally {
+      setSsoLoading(false)
     }
-    
+
     // Fallback if not logged in or SSO handshake fails
     navigate(`/ai/${helpDeskCid}/login`)
   }
@@ -67,7 +69,7 @@ export default function ContactUs() {
     },
     {
       q: 'How do I report a security vulnerability?',
-      a: 'Please email us directly at security@novainc.com. Do not disclose vulnerabilities publicly. We take all security reports seriously and will respond within 24 hours with next steps.'
+      a: 'Please email us directly at saraswatnilesh3@gmail.com. Do not disclose vulnerabilities publicly. We take all security reports seriously and will respond within 24 hours with next steps.'
     },
     {
       q: 'Can I become a partner or reseller?',
@@ -77,7 +79,7 @@ export default function ContactUs() {
 
   return (
     <div className="max-w-[900px] mx-auto px-4 md:px-8 py-12 relative z-10">
-      
+
       {/* Header */}
       <div className="text-center mb-12">
         <span className="text-[10px] tracking-[0.2em] text-[#4f7cff] font-['IBM_Plex_Mono'] font-bold block mb-2 uppercase">GET IN TOUCH</span>
@@ -89,7 +91,7 @@ export default function ContactUs() {
 
       {/* Grid of options */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        
+
         {/* Support Chatbot Card */}
         <div className="glass-card rounded-2xl p-6 border border-[#6382b4]/12 flex flex-col justify-between hover:border-[#6382b4]/28 hover:scale-[1.02] transition-all">
           <div>
@@ -101,7 +103,7 @@ export default function ContactUs() {
               Get immediate answers using our specialized Help Desk retrieval model trained on our knowledge bases.
             </p>
           </div>
-          
+
           <button
             onClick={handleLaunchHelpDesk}
             disabled={ssoLoading}
@@ -122,12 +124,12 @@ export default function ContactUs() {
               Prefer writing detailed requests? Drop us an email and our support queue engineers will review your request.
             </p>
           </div>
-          
+
           <a
-            href="mailto:support@novainc.com"
+            href="mailto:saraswatnilesh3@gmail.com"
             className="w-full py-2 bg-white/5 border border-[#6382b4]/20 hover:bg-[#6382b4]/10 text-white text-xs font-semibold rounded-lg transition-all text-center block no-underline font-mono"
           >
-            support@novainc.com
+            saraswatnilesh3@gmail.com
           </a>
         </div>
 
@@ -142,7 +144,7 @@ export default function ContactUs() {
               Talk to our product specialists directly for volume licensing, SLA setups, and custom deployments.
             </p>
           </div>
-          
+
           <a
             href="tel:+18005550199"
             className="w-full py-2 bg-white/5 border border-[#6382b4]/20 hover:bg-[#6382b4]/10 text-white text-xs font-semibold rounded-lg transition-all text-center block no-underline font-mono"
@@ -164,20 +166,19 @@ export default function ContactUs() {
           {faqs.map((faq, idx) => {
             const isOpen = openFaqIndex === idx
             return (
-              <div 
+              <div
                 key={idx}
                 onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                className={`border rounded-xl p-4 cursor-pointer transition-all ${
-                  isOpen 
-                    ? 'bg-[#16213a]/40 border-[#6382b4]/28' 
+                className={`border rounded-xl p-4 cursor-pointer transition-all ${isOpen
+                    ? 'bg-[#16213a]/40 border-[#6382b4]/28'
                     : 'bg-white/[0.01] border-[#6382b4]/12 hover:border-[#6382b4]/20'
-                }`}
+                  }`}
               >
                 <div className="flex justify-between items-center gap-3">
                   <span className="text-xs font-semibold text-white tracking-tight leading-snug">{faq.q}</span>
-                  <ChevronDown 
-                    size={14} 
-                    className={`text-[#64748b] transition-transform duration-200 ${isOpen ? 'rotate-180 text-white' : ''}`} 
+                  <ChevronDown
+                    size={14}
+                    className={`text-[#64748b] transition-transform duration-200 ${isOpen ? 'rotate-180 text-white' : ''}`}
                   />
                 </div>
                 {isOpen && (

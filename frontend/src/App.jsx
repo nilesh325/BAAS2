@@ -10,8 +10,9 @@ import ChatbotLogin from './pages/ChatbotLogin'
 import ChatbotWindow from './pages/ChatbotWindow'
 
 function App() {
+  const basename = import.meta.env.DEV ? '/static' : '/';
   return (
-    <Router>
+    <Router basename={basename}>
       <div className="flex flex-col min-h-screen">
         {/* Navbar displays dynamically except on customer support paths */}
         <Navbar />
