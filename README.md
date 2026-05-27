@@ -135,8 +135,7 @@ Ensure you have Python (>= 3.10), Node.js (>= 18), and MongoDB running locally o
 
 ---
 
-## 🎓 Showcase Guide: Core Technical Talking Points
-When presenting this project to interviewers, be sure to highlight these three engineering challenges and your solutions:
+## 🎓 Core Technical Talking Points :
 
 1.  **Logical Multi-Tenant Security**: *"To prevent cross-tenant data leaks, we implemented strict database query logical filters. Every ticket and vector document is strictly mapped via `company_id` validated directly from the JWT signature on the backend, ensuring Company A can never access data belonging to Company B."*
 2.  **Threadpool File Processing**: *"PDF reading and text parsing can be heavily blocking operations in single-threaded Python environments. To prevent large document uploads from freezing the FastAPI main thread, we offloaded semantic chunking and embedding extraction to an asynchronous background worker pool, keeping the web server perfectly responsive."*
